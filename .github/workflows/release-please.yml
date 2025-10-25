@@ -38,16 +38,12 @@ jobs:
       with:
         python-version: '3.12'
         
-    - name: Update manifest version
+    - name: Update manifest timestamp
       run: |
         VERSION="${{ needs.release-please.outputs.version }}"
-        echo "Updating manifest.yaml to version: $VERSION"
+        echo "Updating manifest.yaml timestamp for version: $VERSION"
         
-        # Update version in manifest.yaml
-        sed -i "s/^version: .*/version: $VERSION/" manifest.yaml
-        sed -i "s/^  version: .*/  version: $VERSION/" manifest.yaml
-        
-        # Update created_at timestamp
+        # Update created_at timestamp (version is already updated by release-please)
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.%6N+00:00")
         sed -i "s/^created_at: .*/created_at: $TIMESTAMP/" manifest.yaml
         

@@ -7,7 +7,19 @@
       "bump-minor-pre-major": false,
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
-      "prerelease": false
+      "prerelease": false,
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "manifest.yaml",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml", 
+          "path": "manifest.yaml",
+          "jsonpath": "$.meta.version"
+        }
+      ]
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"

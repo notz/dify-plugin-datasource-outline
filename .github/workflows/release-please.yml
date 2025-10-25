@@ -1,0 +1,280 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Run Release Please
+        uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          release-type: simple
+          config-file: release-please-config.json
+
+  build-and-publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Update manifest version
+      run: |
+        VERSION="${{ needs.release-please.outputs.version }}"
+        echo "Updating manifest.yaml to version: $VERSION"
+        
+        # Update version in manifest.yaml
+        sed -i "s/^version: .*/version: $VERSION/" manifest.yaml
+        sed -i "s/^  version: .*/  version: $VERSION/" manifest.yaml
+        
+        # Update created_at timestamp
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.%6N+00:00")
+        sed -i "s/^created_at: .*/created_at: $TIMESTAMP/" manifest.yaml
+        
+        echo "Updated manifest.yaml:"
+        cat manifest.yaml
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Download Dify Plugin Tool
+      run: |
+        echo "Downloading Dify plugin packaging tool..."
+        
+        # Detect architecture
+        ARCH=$(uname -m)
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        
+        case $ARCH in
+          x86_64) ARCH="amd64" ;;
+          aarch64|arm64) ARCH="arm64" ;;
+          armv7l) ARCH="arm" ;;
+        esac
+        
+        case $OS in
+          linux) OS="linux" ;;
+          darwin) OS="darwin" ;;
+          msys*|mingw*|cygwin*) OS="windows" ;;
+        esac
+        
+        BINARY_NAME="dify-plugin-${OS}-${ARCH}"
+        if [ "$OS" = "windows" ]; then
+          BINARY_NAME="${BINARY_NAME}.exe"
+        fi
+        
+        echo "Downloading binary: $BINARY_NAME"
+        
+        # Get latest release info
+        LATEST_RELEASE=$(curl -s https://api.github.com/repos/langgenius/dify-plugin-daemon/releases/latest)
+        DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep -o "https://github.com/langgenius/dify-plugin-daemon/releases/download/[^\"]*${BINARY_NAME}" | head -1)
+        
+        if [ -z "$DOWNLOAD_URL" ]; then
+          echo "Error: Could not find download URL for $BINARY_NAME"
+          echo "Available assets:"
+          echo "$LATEST_RELEASE" | grep '"name":'
+          exit 1
+        fi
+        
+        echo "Download URL: $DOWNLOAD_URL"
+        curl -L -o dify-plugin "$DOWNLOAD_URL"
+        chmod +x dify-plugin
+        
+        # Verify the tool works
+        ./dify-plugin version
+        
+    - name: Package Plugin with Dify Tool
+      run: |
+        echo "Packaging plugin with official Dify tool..."
+        
+        # Create parent directory structure as expected by the tool
+        mkdir -p ../build
+        cp -r . ../build/outline-datasource-plugin
+        cd ../build
+        
+        # Package the plugin
+        ../outline-datasource-plugin/dify-plugin plugin package outline-datasource-plugin
+        
+        # Move the generated .difypkg file back to workspace
+        mv *.difypkg ../outline-datasource-plugin/
+        cd ../outline-datasource-plugin
+        
+        # List generated files
+        echo "Generated plugin files:"
+        ls -la *.difypkg
+        
+        # Create checksums
+        for file in *.difypkg; do
+          sha256sum "$file" > "$file.sha256"
+        done
+        
+    - name: Create additional distribution formats
+      run: |
+        echo "Creating additional distribution formats..."
+        
+        VERSION="${{ needs.release-please.outputs.version }}"
+        PACKAGE_NAME="outline-datasource-plugin-$VERSION"
+        
+        # Create directory for traditional packaging
+        mkdir -p "dist/$PACKAGE_NAME"
+        
+        # Copy all files except build artifacts
+        cp manifest.yaml "dist/$PACKAGE_NAME/"
+        cp main.py "dist/$PACKAGE_NAME/"
+        cp requirements.txt "dist/$PACKAGE_NAME/"
+        cp -r provider/ "dist/$PACKAGE_NAME/"
+        cp -r datasources/ "dist/$PACKAGE_NAME/"
+        cp README.md "dist/$PACKAGE_NAME/"
+        cp LICENSE "dist/$PACKAGE_NAME/"
+        cp PRIVACY.md "dist/$PACKAGE_NAME/"
+        cp CHANGELOG.md "dist/$PACKAGE_NAME/"
+        
+        # Copy assets if they exist
+        if [ -d "_assets" ]; then
+          cp -r _assets/ "dist/$PACKAGE_NAME/"
+        fi
+        
+        # Create installation guide
+        cat > "dist/$PACKAGE_NAME/INSTALL.md" << 'EOF'
+        # Installation Guide
+        
+        ## Requirements
+        - Dify version 1.9.2 or higher
+        - Python 3.12
+        
+        ## Installation Methods
+        
+        ### Method 1: Using .difypkg file (Recommended)
+        
+        1. Download the `.difypkg` file from the release
+        2. In Dify, go to Plugin Management
+        3. Click "Install Plugin" → "Install via Local File"
+        4. Upload the `.difypkg` file or drag and drop it
+        5. The plugin will be automatically installed and configured
+        
+        ### Method 2: Manual Installation
+        
+        1. Extract this package to your Dify plugins directory
+        2. Install dependencies: `pip install -r requirements.txt`
+        3. Restart your Dify instance
+        4. The Outline datasource should now be available in the Dify admin panel
+        
+        ## Configuration
+        
+        1. Go to Dify Settings > Data Sources
+        2. Add a new Outline datasource
+        3. Provide your Outline API key and workspace URL
+        4. Test the connection and start importing documents
+        
+        For detailed configuration instructions, see README.md
+        EOF
+        
+        # Create traditional archives
+        cd dist
+        tar -czf "$PACKAGE_NAME.tar.gz" "$PACKAGE_NAME"
+        zip -r "$PACKAGE_NAME.zip" "$PACKAGE_NAME"
+        
+        # Create checksums for traditional formats
+        sha256sum "$PACKAGE_NAME.tar.gz" > "$PACKAGE_NAME.tar.gz.sha256"
+        sha256sum "$PACKAGE_NAME.zip" > "$PACKAGE_NAME.zip.sha256"
+        
+        cd ..
+        echo "Distribution packages created:"
+        ls -la dist/
+        
+    - name: Generate release notes
+      run: |
+        VERSION="${{ needs.release-please.outputs.version }}"
+        
+        cat > RELEASE_NOTES.md << EOF
+        ## Outline Datasource Plugin v$VERSION
+        
+        ### 🚀 Installation
+        
+        **Recommended:** Download the \`.difypkg\` file and install through Dify's plugin management interface:
+        
+        1. In Dify, go to Plugin Management
+        2. Click "Install Plugin" → "Install via Local File" 
+        3. Upload the \`.difypkg\` file or drag and drop it
+        
+        **Alternative:** Use traditional package formats for manual installation:
+        - \`outline-datasource-plugin-$VERSION.tar.gz\` - Linux/macOS
+        - \`outline-datasource-plugin-$VERSION.zip\` - Windows/Cross-platform
+        
+        ### ✨ Features
+        - Connect to Outline knowledge bases using API keys
+        - Import documents and collections from Outline
+        - Support for nested document structures
+        - Automatic content extraction and processing
+        
+        ### 📋 Requirements
+        - Dify version 1.9.2 or higher
+        - Python 3.12
+        - Valid Outline API key
+        
+        ### 🔐 Verification
+        
+        Verify package integrity using the provided SHA256 checksums:
+        
+        \`\`\`bash
+        # For .difypkg
+        sha256sum -c outline-datasource-plugin-$VERSION.difypkg.sha256
+        
+        # For traditional formats
+        sha256sum -c outline-datasource-plugin-$VERSION.tar.gz.sha256
+        sha256sum -c outline-datasource-plugin-$VERSION.zip.sha256
+        \`\`\`
+        
+        ### ⚖️ License
+        
+        This software is licensed under GPL-3.0. See LICENSE file for details.
+        EOF
+        
+    - name: Update GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.release-please.outputs.tag_name }}
+        name: "Outline Datasource Plugin v${{ needs.release-please.outputs.version }}"
+        body_path: RELEASE_NOTES.md
+        files: |
+          *.difypkg
+          *.difypkg.sha256
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.tar.gz
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.tar.gz.sha256
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.zip
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.zip.sha256
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: outline-datasource-plugin-${{ needs.release-please.outputs.version }}
+        path: |
+          *.difypkg
+          *.difypkg.sha256
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.tar.gz
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.zip
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.tar.gz.sha256
+          dist/outline-datasource-plugin-${{ needs.release-please.outputs.version }}.zip.sha256
+        retention-days: 90

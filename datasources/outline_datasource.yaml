@@ -1,0 +1,28 @@
+identity:
+  name: outline_datasource
+  author: notz
+  label:
+    en_US: Outline
+description:
+  en_US: Search for documents and collections in your Outline workspace
+
+parameters:
+
+output_schema:
+    type: object
+    properties:
+      workspace_url:
+        type: string
+        description: workspace URL
+      document_id:
+        type: string
+        description: document id
+      collection_id:
+        type: string
+        description: collection id (if applicable)
+      content:
+        type: string
+        description: document content
+extra:
+  python:
+    source: datasources/outline_datasource.py

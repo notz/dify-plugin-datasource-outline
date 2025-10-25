@@ -1,0 +1,36 @@
+identity:
+  author: notz
+  name: outline_datasource
+  label:
+    en_US: Outline
+  description:
+    en_US: Outline Datasource
+  icon: icon.svg
+
+provider_type: online_document
+credentials_schema:
+  - name: api_key
+    type: secret-input
+    required: true
+    label:
+      en_US: API Key
+    placeholder:
+      en_US: Enter your Outline API Key
+    help:
+      en_US: Get your API key from Settings > API & Apps in your Outline workspace
+    url: https://app.getoutline.com/settings/api
+  - name: workspace_url
+    type: text-input
+    required: true
+    label:
+      en_US: Workspace URL
+    placeholder:
+      en_US: https://your-team.getoutline.com
+    help:
+      en_US: Your Outline workspace URL (e.g., https://your-team.getoutline.com)
+
+datasources:
+  - datasources/outline_datasource.yaml
+extra:
+  python:
+    source: provider/outline_datasource.py

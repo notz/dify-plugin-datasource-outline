@@ -179,7 +179,7 @@ class OutlineExtractor:
         Returns:
             Markdown content with relative URLs rewritten to absolute URLs
         """
-        pattern = re.compile(r'(!?\[[^\]]*\]\()(/[^\s)]*)')
+        pattern = re.compile(r'(!?\[[^\]]*\]\()(/(?!/)[^\s)]*)')
 
         def replace(match: re.Match) -> str:
             return f"{match.group(1)}{self.client.workspace_url}{match.group(2)}"

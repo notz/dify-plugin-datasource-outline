@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.4...v1.1.5) (2026-08-20)
+
+
+### Bug Fixes
+
+* improve packaging process in release workflow ([af02723](https://github.com/notz/dify-plugin-datasource-outline/commit/af027239e5b52a08b3ee4ef67e376f0bfe01abbb))
+
 ## [1.1.4](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.3...v1.1.4) (2026-08-20)
 
 

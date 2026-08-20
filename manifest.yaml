@@ -1,4 +1,4 @@
-version: 1.0.0
+version: 1.1.5
 type: plugin
 author: notz
 name: outline_datasource
@@ -14,7 +14,7 @@ plugins:
   datasources:
     - provider/outline_datasource.yaml
 meta:
-  version: 1.0.0
+  version: 1.1.5
   arch:
     - amd64
     - arm64

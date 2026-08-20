@@ -21,8 +21,8 @@ jobs:
         uses: google-github-actions/release-please-action@v4
         id: release
         with:
-          release-type: simple
           config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   build-and-publish:
     needs: release-please
@@ -42,11 +42,11 @@ jobs:
       run: |
         VERSION="${{ needs.release-please.outputs.version }}"
         echo "Updating manifest.yaml timestamp for version: $VERSION"
-        
+
         # Update created_at timestamp (version is already updated by release-please)
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.%6N+00:00")
         sed -i "s/^created_at: .*/created_at: $TIMESTAMP/" manifest.yaml
-        
+
         echo "Updated manifest.yaml:"
         cat manifest.yaml
         

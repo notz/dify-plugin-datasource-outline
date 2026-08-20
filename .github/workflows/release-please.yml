@@ -106,7 +106,7 @@ jobs:
         
         # Create parent directory structure as expected by the tool
         mkdir -p ../build/outline-datasource-plugin
-        rsync -a --exclude='.git' --exclude='dist' --exclude='*.difypkg' --exclude='*.difypkg.sha256' . ../build/outline-datasource-plugin/
+        rsync -a --exclude='.git' --exclude='dist' --exclude='*.difypkg' --exclude='*.difypkg.sha256' --exclude='dify-plugin' --exclude='dify-plugin.exe' . ../build/outline-datasource-plugin/
         cd ../build
         
         # Package the plugin

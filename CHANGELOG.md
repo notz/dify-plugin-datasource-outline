@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.2...v1.1.3) (2026-08-20)
+
+
+### Bug Fixes
+
+* exclude dify-plugin binary from plugin package to stay under size limit ([#8](https://github.com/notz/dify-plugin-datasource-outline/issues/8)) ([249c81c](https://github.com/notz/dify-plugin-datasource-outline/commit/249c81cb899349bd9a42a4965f60a36f0cf60631))
+
 ## [1.1.2](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.1...v1.1.2) (2026-08-20)
 
 

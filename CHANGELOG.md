@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.3...v1.1.4) (2026-08-20)
+
+
+### Miscellaneous Chores
+
+* release 1.1.4 ([83ee07f](https://github.com/notz/dify-plugin-datasource-outline/commit/83ee07fc10fcbdbeb190927fd792a34e76ed2ccd))
+
 ## [1.1.3](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.2...v1.1.3) (2026-08-20)
 
 

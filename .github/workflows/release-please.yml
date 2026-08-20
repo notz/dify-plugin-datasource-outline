@@ -110,7 +110,7 @@ jobs:
         cd ../build
         
         # Package the plugin
-        ../outline-datasource-plugin/dify-plugin plugin package outline-datasource-plugin
+        ./outline-datasource-plugin/dify-plugin plugin package outline-datasource-plugin
         
         # Move the generated .difypkg file back to workspace
         mv *.difypkg ../outline-datasource-plugin/

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.5...v1.1.6) (2026-08-20)
+
+
+### Bug Fixes
+
+* release please updating manifest ([332fadc](https://github.com/notz/dify-plugin-datasource-outline/commit/332fadcb3f95ab8d952666c8e8375ce9eb26484a))
+
 ## [1.1.5](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.4...v1.1.5) (2026-08-20)
 
 

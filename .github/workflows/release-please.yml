@@ -103,19 +103,20 @@ jobs:
     - name: Package Plugin with Dify Tool
       run: |
         echo "Packaging plugin with official Dify tool..."
-        
+        WORKSPACE_DIR="$(pwd)"
+
         # Create parent directory structure as expected by the tool
         mkdir -p ../build/outline-datasource-plugin
         rsync -a --exclude='.git' --exclude='dist' --exclude='*.difypkg' --exclude='*.difypkg.sha256' --exclude='dify-plugin' --exclude='dify-plugin.exe' . ../build/outline-datasource-plugin/
         cp dify-plugin ../build/dify-plugin
         cd ../build
-        
+
         # Package the plugin
         ./dify-plugin plugin package outline-datasource-plugin
-        
+
         # Move the generated .difypkg file back to workspace
-        mv *.difypkg ../outline-datasource-plugin/
-        cd ../outline-datasource-plugin
+        mv *.difypkg "$WORKSPACE_DIR/"
+        cd "$WORKSPACE_DIR"
         
         # List generated files
         echo "Generated plugin files:"

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.1.0...v1.1.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* wrong dify-plugin binary path in build-and-publish workflow ([#4](https://github.com/notz/dify-plugin-datasource-outline/issues/4)) ([5b1884e](https://github.com/notz/dify-plugin-datasource-outline/commit/5b1884ee17379b1240c34e2181b9248bf5a1461b))
+
 ## [1.1.0](https://github.com/notz/dify-plugin-datasource-outline/compare/v1.0.0...v1.1.0) (2026-08-20)
 
 

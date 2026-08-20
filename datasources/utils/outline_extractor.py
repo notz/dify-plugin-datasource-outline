@@ -71,6 +71,7 @@ class OutlineExtractor:
             if text_content:
                 # Clean up the text content
                 cleaned_content = self._clean_text_content(text_content)
+                cleaned_content = self._resolve_relative_urls(cleaned_content)
                 formatted_content += cleaned_content
 
             return formatted_content
@@ -164,6 +165,26 @@ class OutlineExtractor:
             cleaned = '\n\n'.join(paragraphs)
 
         return cleaned
+
+    def _resolve_relative_urls(self, text: str) -> str:
+        """
+        Rewrite root-relative markdown link/image URLs (e.g. attachment
+        redirects like "/api/attachments.redirect?id=...") to absolute
+        URLs pointing at the Outline workspace, since Dify has no
+        knowledge of the Outline host to resolve them against.
+
+        Args:
+            text: Markdown content that may contain relative URLs
+
+        Returns:
+            Markdown content with relative URLs rewritten to absolute URLs
+        """
+        pattern = re.compile(r'(!?\[[^\]]*\]\()(/(?!/)[^\s)]*)')
+
+        def replace(match: re.Match) -> str:
+            return f"{match.group(1)}{self.client.workspace_url}{match.group(2)}"
+
+        return pattern.sub(replace, text)
 
     def _format_outline_markdown(self, content: str) -> str:
         """
